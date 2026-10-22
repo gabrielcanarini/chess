@@ -3,50 +3,54 @@ import tkinter as tk
 from PIL import Image, ImageTk
 
 def get_initial_state_pieces():
-    piece = []
+    pieces: list[Piece | None] = [None] * 64
 
-    # Torri
-    piece.append(Piece(type_piece="Rook", color="W", col=Col.a, row=1))
-    piece.append(Piece(type_piece="Rook", color="B", col=Col.a, row=8))
-    piece.append(Piece(type_piece="Rook", color="W", col=Col.h, row=1))
-    piece.append(Piece(type_piece="Rook", color="B", col=Col.h, row=8))
+    # Pezzi neri
+    pieces[56:64] = [
+        Piece(type_piece="Rook", color="B"),
+        Piece(type_piece="Knight", color="B"),
+        Piece(type_piece="Bishop", color="B"),
+        Piece(type_piece="Queen", color="B"),
+        Piece(type_piece="King", color="B"),
+        Piece(type_piece="Bishop", color="B"),
+        Piece(type_piece="Knight", color="B"),
+        Piece(type_piece="Rook", color="B"),
+    ]
 
-    # Cavalli
-    piece.append(Piece(type_piece="Knight", color="W", col=Col.b, row=1))
-    piece.append(Piece(type_piece="Knight", color="B", col=Col.b, row=8))
-    piece.append(Piece(type_piece="Knight", color="W", col=Col.g, row=1))
-    piece.append(Piece(type_piece="Knight", color="B", col=Col.g, row=8))
+    # Pedoni neri
+    for col in range(8):
+        pieces[48 + col] = Piece(type_piece="Pawn", color="B")
 
-    # Alfieri
-    piece.append(Piece(type_piece="Bishop", color="W", col=Col.c, row=1))
-    piece.append(Piece(type_piece="Bishop", color="B", col=Col.c, row=8))
-    piece.append(Piece(type_piece="Bishop", color="W", col=Col.f, row=1))
-    piece.append(Piece(type_piece="Bishop", color="B", col=Col.f, row=8))
+    # Pedoni bianchi
+    for col in range(8):
+        pieces[8 + col] = Piece(type_piece="Pawn", color="W")
 
-    # Donna
-    piece.append(Piece(type_piece="Queen", color="W", col=Col.d, row=1))
-    piece.append(Piece(type_piece="Queen", color="B", col=Col.d, row=8))
+    # Pezzi bianchi
+    pieces[0:8] = [
+        Piece(type_piece="Rook", color="W"),
+        Piece(type_piece="Knight", color="W"),
+        Piece(type_piece="Bishop", color="W"),
+        Piece(type_piece="Queen", color="W"),
+        Piece(type_piece="King", color="W"),
+        Piece(type_piece="Bishop", color="W"),
+        Piece(type_piece="Knight", color="W"),
+        Piece(type_piece="Rook", color="W"),
+    ]
 
-    # Re
-    piece.append(Piece(type_piece="King", color="W", col=Col.e, row=1))
-    piece.append(Piece(type_piece="King", color="B", col=Col.e, row=8))
-
-    #PEZZO DI TEST
-    piece.append(Piece(type_piece="King", color="B", col=Col.c, row=3))
-    piece.append(Piece(type_piece="King", color="W", col=Col.c, row=6))
+    return pieces
 
 
-    # Pedoni
-    for i in Col:
-        piece.append(Piece(type_piece="Pawn", color="W", col=i, row=2))
-        piece.append(Piece(type_piece="Pawn", color="B", col=i, row=7))
-    return piece
-
+def get_index_by_initial_position(pos: int, spostamento_row: int, spostamento_col: int):
+    return pos + (spostamento_row * 8) + spostamento_col
+def get_row_by_index(pos: int):
+    return pos // 8
+def get_col_by_index(pos: int):
+    return pos % 8
 
 class Game:
-    pieces = []
-    selected_piece: Piece | None = None
-    legal_move: list[Cell] = []
+    pieces: list[Piece | None] = []
+    selected_piece: int | None = None
+    legal_move: list[int] = []
     window = tk.Tk()
     images = {}
     marker = None
@@ -69,10 +73,18 @@ class Game:
         self.marker = Image.open("./gui/asset/marker.png").convert("RGBA").resize((21,21))
 
 
+    #funzione che da una casella ta dá l'index di una casella rispetto ad un movimento x/y dato
 
-    def calc_legal_move(self):
+    def check_and_add_legal_move(self, i: int):
+        # DA VEDERE SE LA MOSSA É EFFETTIVAMENTE LEGALE: non ho ancora verificato se la mossa porta la situazione di scacco.
+
+        self.legal_move.append(i)
+
+
+    def search_possible_move(self, pos: int):
         self.legal_move = []
-        piece = self.selected_piece
+        piece = self.pieces[pos]
+
         if piece is None:
             return
 
@@ -80,77 +92,64 @@ class Game:
         if piece.type_piece == "Pawn":
             if piece.color == "W":
                 #Mossa base, una casella avanti
-                def x(p: Piece):
-                    return p.row == piece.row+1 and p.col.value == piece.col.value
-
-                nextPiece = next(filter(x, self.pieces), None)
-
-                if nextPiece is None:
-                    self.legal_move.append(Cell(row=piece.row+1, col=piece.col))
+                indice_casella_davanti = get_index_by_initial_position(pos, 1, 0)
+                if self.pieces[indice_casella_davanti] is None:
+                    self.check_and_add_legal_move(indice_casella_davanti)
 
                 #Controllo i lati se puó mangiare
-                def x(p: Piece):
-                    return p.row == piece.row + 1 and p.col.value == piece.col.value - 1 and p.color == "B"
+                indice_pezzo_laterale_sinistro = get_index_by_initial_position(pos, 1, 1)
 
-                pezzo_laterale_sinistro =next(filter(x, self.pieces), None)
+                if self.pieces[indice_pezzo_laterale_sinistro] is not None and self.pieces[indice_pezzo_laterale_sinistro].color == "B":
+                    self.check_and_add_legal_move(indice_pezzo_laterale_sinistro)
 
-                if pezzo_laterale_sinistro is not None:
-                    self.legal_move.append(Cell(row=piece.row+1, col=Col(piece.col.value - 1)))
+                indice_pezzo_laterale_destro = get_index_by_initial_position(pos, 1, -1)
 
-                def x(p: Piece):
-                    return p.row == piece.row + 1 and p.col.value == piece.col.value + 1 and p.color == "B"
+                if self.pieces[indice_pezzo_laterale_destro] is not None and self.pieces[indice_pezzo_laterale_destro].color == "B":
+                    self.check_and_add_legal_move(indice_pezzo_laterale_destro)
 
-                pezzo_laterale_destro =next(filter(x, self.pieces), None)
-
-                if pezzo_laterale_destro is not None:
-                    self.legal_move.append(Cell(row=piece.row+1, col=Col(piece.col.value+1)))
-
-                #Controllo la prima mosso di 2 caselle avanti
-                if piece.row == 2 and nextPiece is None:
-                    def x(p: Piece):
-                        return p.row == piece.row + 2 and p.col == piece.col
-                    due_avvanti = next(filter(x, self.pieces), None)
-                    if due_avvanti is None:
-                        self.legal_move.append(Cell(row=piece.row + 2, col=piece.col))
+                #Controllo la prima mossa di 2 caselle avanti
+                if self.pieces[indice_casella_davanti] is None and get_row_by_index(pos) == 2:
+                    indice_due_caselle_avanti = get_index_by_initial_position(pos, 2, 0)
+                    if \
+                    self.pieces[indice_due_caselle_avanti] is None or self.pieces[indice_due_caselle_avanti].color == "B":
+                        self.check_and_add_legal_move(indice_due_caselle_avanti)
 
             if piece.color == "B":
-                # Mossa base, una casella avanti
-                def x(p: Piece):
-                    return p.row == piece.row - 1 and p.col.value == piece.col.value
+                #Mossa base, una casella avanti
+                indice_casella_davanti = get_index_by_initial_position(pos, -1, 0)
+                if self.pieces[indice_casella_davanti] is None:
+                    self.check_and_add_legal_move(indice_casella_davanti)
 
-                nextPiece = next(filter(x, self.pieces), None)
+                #Controllo i lati se puó mangiare
+                indice_pezzo_laterale_sinistro = get_index_by_initial_position(pos, -1, 1)
 
-                if nextPiece is None:
-                    self.legal_move.append(Cell(row=piece.row - 1, col=piece.col))
+                if self.pieces[indice_pezzo_laterale_sinistro] is not None and self.pieces[indice_pezzo_laterale_sinistro].color == "W":
+                    self.check_and_add_legal_move(indice_pezzo_laterale_sinistro)
 
-                # Controllo i lati se puó mangiare
-                def x(p: Piece):
-                    return p.row == piece.row - 1 and p.col.value == piece.col.value + 1 and p.color == "W"
+                indice_pezzo_laterale_destro = get_index_by_initial_position(pos, -1, -1)
 
-                pezzo_laterale_sinistro = next(filter(x, self.pieces), None)
+                if self.pieces[indice_pezzo_laterale_destro] is not None and self.pieces[indice_pezzo_laterale_destro].color == "W":
+                    self.check_and_add_legal_move(indice_pezzo_laterale_destro)
 
-                if pezzo_laterale_sinistro is not None:
-                    self.legal_move.append(Cell(row=piece.row - 1, col=Col(piece.col.value + 1)))
+                #Controllo la prima mossa di 2 caselle avanti
+                if self.pieces[indice_casella_davanti] is None and get_row_by_index(pos) == 7:
+                    indice_due_caselle_avanti = get_index_by_initial_position(pos, -2, 0)
+                    if \
+                    self.pieces[indice_due_caselle_avanti] is None or self.pieces[indice_due_caselle_avanti].color == "B":
+                        self.check_and_add_legal_move(indice_due_caselle_avanti)
 
-                def x(p: Piece):
-                    return p.row == piece.row - 1 and p.col.value == piece.col.value - 1 and p.color == "W"
+        if piece.type_piece == "Bishop":
+            #ciclo per un massimo di 7 volte (la massima distanza che puó percorrere) finche non trovo un ostacolo. In ogni direzione
+            o_alto_destro = False
+            o_alto_sinistro = False
+            o_basso_destro = False
+            o_basso_sinistro = False
 
-                pezzo_laterale_destro = next(filter(x, self.pieces), None)
-
-                if pezzo_laterale_destro is not None:
-                    self.legal_move.append(Cell(row=piece.row - 1, col=Col(piece.col.value - 1)))
-
-                # Controllo la prima mosso di 2 caselle avanti
-                if piece.row == 7 and nextPiece is None:
+            for i in range(1,8):
+                #ciclo nella diagonale alta destra rispetto al pezzo
+                if not o_alto_destro:
                     def x(p: Piece):
-                        return p.row == piece.row - 2 and p.col == piece.col
-
-                    due_avvanti = next(filter(x, self.pieces), None)
-                    if due_avvanti is None:
-                        self.legal_move.append(Cell(row=piece.row - 2, col=piece.col))
-
-
-
+                        return
 
 
 
@@ -158,14 +157,16 @@ class Game:
 
 
 
-    def select_piece(self, piece: Piece):
-        if self.selected_piece is not None and self.selected_piece.col == piece.col and self.selected_piece.row == piece.row:
+    def select_piece(self, position: int):
+        if self.selected_piece is not None and self.selected_piece == position:
             return
+        print(f"posizione: {position}, tipo: {self.pieces[position].type_piece}, colore: {self.pieces[position].color}")
 
-        self.selected_piece = piece
-        self.calc_legal_move()
+        self.selected_piece = position
+        self.search_possible_move(position)
 
 
+        #Soluzione pessima, si vede un attimo di schermata bianca qunado aggiorna si deve trovare una soluzione migliore.
         self.draw_board()
 
 
@@ -174,50 +175,41 @@ class Game:
             self.main_frame.destroy()
         self.main_frame = tk.Frame(self.window)
         self.main_frame.grid()
-        for r in range(1,9):
-            for c in range(1,9):
-                bg = "black" if (r + c) % 2 == 0 else "white"
+        for r in range(0, 64):
+            bg = "white" if (get_row_by_index(r) + get_col_by_index(r)) % 2 != 0 else "black"
 
-                cella = tk.Frame(self.main_frame, width=100, height=100, bg=bg)
-                cella.grid(row=8 - r, column=c - 1)
-                cella.grid_propagate(False)
+            cella = tk.Frame(self.main_frame, width=100, height=100, bg=bg)
+            cella.grid(row=8-get_row_by_index(r), column=get_col_by_index(r))
+            cella.grid_propagate(False)
 
-                def x(p: Piece) -> bool:
-                    return r == p.row and c == p.col.value
+            piece = self.pieces[r]
 
-                piece = next(filter(x, self.pieces), None)
-                def y(c: Cell):
-                    return c.col.value == c and c.row == r
+            is_legal_move = r in self.legal_move
 
-                is_legal_move = any(
-                    cell.row == r and cell.col.value == c
-                    for cell in self.legal_move
-                )
+            if piece is not None and is_legal_move:
+                marker = self.marker.copy()
+                piece_img = self.images[(piece.color, piece.type_piece)].copy()
+                piece_img.alpha_composite(marker)
+                img = ImageTk.PhotoImage(piece_img)
+                label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
+                label.image = img
+                label.place(rely=0.5,relx=0.5, anchor="center")
+                continue
 
-                if piece is not None and is_legal_move:
-                    marker = self.marker.copy()
-                    piece_img = self.images[(piece.color, piece.type_piece)].copy()
-                    piece_img.alpha_composite(marker)
-                    img = ImageTk.PhotoImage(piece_img)
-                    label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
-                    label.image = img
-                    label.place(rely=0.5,relx=0.5, anchor="center")
-                    continue
+            if piece is not None and not is_legal_move:
+                img = ImageTk.PhotoImage(self.images[(piece.color, piece.type_piece)])
 
-                if piece is not None and not is_legal_move:
-                    img = ImageTk.PhotoImage(self.images[(piece.color, piece.type_piece)])
+                label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
+                label.image = img
+                label.bind("<Button-1>", lambda event, position=r: self.select_piece(position))
+                label.place(rely=0.5,relx=0.5,anchor="center")
+                continue
 
-                    label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
-                    label.image = img
-                    label.bind("<Button-1>", lambda event, p=piece: self.select_piece(p))
-                    label.place(rely=0.5,relx=0.5,anchor="center")
-                    continue
-
-                if is_legal_move:
-                    img = ImageTk.PhotoImage(self.marker)
-                    label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
-                    label.image = img
-                    label.place(relx=0.5,rely=0.5,anchor="center")
+            if is_legal_move:
+                img = ImageTk.PhotoImage(self.marker)
+                label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
+                label.image = img
+                label.place(relx=0.5,rely=0.5,anchor="center")
 
 
 
