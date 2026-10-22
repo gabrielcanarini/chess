@@ -27,3 +27,9 @@ class Piece:
         self.col=col
         self.row=row
         self.color=color
+
+
+class Cell:
+    def __init__(self, row, col: Col):
+        self.row = row
+        self.col = col
