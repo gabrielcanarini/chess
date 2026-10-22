@@ -35,6 +35,7 @@ def get_initial_state_pieces():
 
     #PEZZO DI TEST
     piece.append(Piece(type_piece="King", color="B", col=Col.c, row=3))
+    piece.append(Piece(type_piece="King", color="B", col=Col.c, row=6))
 
 
     # Pedoni
@@ -113,6 +114,47 @@ class Game:
                     due_avvanti = next(filter(x, self.pieces), None)
                     if due_avvanti is None:
                         self.legal_move.append(Cell(row=piece.row + 2, col=piece.col))
+
+            if piece.color == "B":
+                # Mossa base, una casella avanti
+                def x(p: Piece):
+                    return p.row == piece.row - 1 and p.col.value == piece.col.value
+
+                nextPiece = next(filter(x, self.pieces), None)
+
+                if nextPiece is None:
+                    self.legal_move.append(Cell(row=piece.row - 1, col=piece.col))
+
+                # Controllo i lati se puó mangiare
+                def x(p: Piece):
+                    return p.row == piece.row - 1 and p.col.value == piece.col.value + 1
+
+                pezzo_laterale_sinistro = next(filter(x, self.pieces), None)
+
+                if pezzo_laterale_sinistro is not None:
+                    self.legal_move.append(Cell(row=piece.row - 1, col=Col(piece.col.value + 1)))
+
+                def x(p: Piece):
+                    return p.row == piece.row - 1 and p.col.value == piece.col.value - 1
+
+                pezzo_laterale_destro = next(filter(x, self.pieces), None)
+
+                if pezzo_laterale_destro is not None:
+                    self.legal_move.append(Cell(row=piece.row - 1, col=Col(piece.col.value - 1)))
+
+                # Controllo la prima mosso di 2 caselle avanti
+                if piece.row == 7 and nextPiece is None:
+                    def x(p: Piece):
+                        return p.row == piece.row - 2 and p.col == piece.col
+
+                    due_avvanti = next(filter(x, self.pieces), None)
+                    if due_avvanti is None:
+                        self.legal_move.append(Cell(row=piece.row - 2, col=piece.col))
+
+
+
+
+
 
         print(f"{self.legal_move}")
 
