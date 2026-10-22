@@ -1,5 +1,3 @@
-from cProfile import label
-
 from Pieces import *
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -35,7 +33,7 @@ def get_initial_state_pieces():
 
     #PEZZO DI TEST
     piece.append(Piece(type_piece="King", color="B", col=Col.c, row=3))
-    piece.append(Piece(type_piece="King", color="B", col=Col.c, row=6))
+    piece.append(Piece(type_piece="King", color="W", col=Col.c, row=6))
 
 
     # Pedoni
@@ -92,7 +90,7 @@ class Game:
 
                 #Controllo i lati se puó mangiare
                 def x(p: Piece):
-                    return p.row == piece.row + 1 and p.col.value == piece.col.value - 1
+                    return p.row == piece.row + 1 and p.col.value == piece.col.value - 1 and p.color == "B"
 
                 pezzo_laterale_sinistro =next(filter(x, self.pieces), None)
 
@@ -100,7 +98,7 @@ class Game:
                     self.legal_move.append(Cell(row=piece.row+1, col=Col(piece.col.value - 1)))
 
                 def x(p: Piece):
-                    return p.row == piece.row + 1 and p.col.value == piece.col.value + 1
+                    return p.row == piece.row + 1 and p.col.value == piece.col.value + 1 and p.color == "B"
 
                 pezzo_laterale_destro =next(filter(x, self.pieces), None)
 
@@ -127,7 +125,7 @@ class Game:
 
                 # Controllo i lati se puó mangiare
                 def x(p: Piece):
-                    return p.row == piece.row - 1 and p.col.value == piece.col.value + 1
+                    return p.row == piece.row - 1 and p.col.value == piece.col.value + 1 and p.color == "W"
 
                 pezzo_laterale_sinistro = next(filter(x, self.pieces), None)
 
@@ -135,7 +133,7 @@ class Game:
                     self.legal_move.append(Cell(row=piece.row - 1, col=Col(piece.col.value + 1)))
 
                 def x(p: Piece):
-                    return p.row == piece.row - 1 and p.col.value == piece.col.value - 1
+                    return p.row == piece.row - 1 and p.col.value == piece.col.value - 1 and p.color == "W"
 
                 pezzo_laterale_destro = next(filter(x, self.pieces), None)
 
