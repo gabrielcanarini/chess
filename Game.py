@@ -33,6 +33,7 @@ def get_initial_state_pieces():
     piece.append(Piece(type_piece="King", color="W", col=Col.e, row=1))
     piece.append(Piece(type_piece="King", color="B", col=Col.e, row=8))
 
+
     # Pedoni
     for i in Col:
         piece.append(Piece(type_piece="Pawn", color="W", col=i, row=2))
@@ -57,13 +58,13 @@ class Game:
 
         #Load asset
         self.images = {
-        (color, piece): tk.PhotoImage(
-            file=f"./gui/asset/{color}_{piece}.png"
-        ).zoom(2,2)
+        (color, piece): Image.open(
+            f"./gui/asset/{color}_{piece}.png"
+        ).convert("RGBA").resize((32,64))
         for color in ("W", "B")
         for piece in ("Pawn", "Rook", "Knight", "Bishop", "Queen", "King")
         }
-        self.marker = tk.PhotoImage(file="./gui/asset/marker.png").subsample(10,10)
+        self.marker = Image.open("./gui/asset/marker.png").convert("RGBA").resize((21,21))
 
 
 
@@ -116,14 +117,6 @@ class Game:
                     return r == p.row and c == p.col.value
 
                 piece = next(filter(x, self.pieces), None)
-
-                if piece is not None:
-                    img = self.images[(piece.color, piece.type_piece)]
-
-                    label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
-                    label.bind("<Button-1>", lambda event, p=piece: self.select_piece(p))
-                    label.place(rely=0.5,relx=0.5,anchor="center")
-
                 def y(c: Cell):
                     return c.col.value == c and c.row == r
 
@@ -132,9 +125,29 @@ class Game:
                     for cell in self.legal_move
                 )
 
-                if is_legal_move:
-                    img = self.marker
+                if piece is not None and is_legal_move:
+                    marker = self.marker.copy()
+                    piece_img = self.images[(piece.color, piece.type_piece)].copy()
+                    piece_img.alpha_composite(marker)
+                    img = ImageTk.PhotoImage(piece_img)
                     label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
+                    label.image = img
+                    label.place(rely=0.5,relx=0.5, anchor="center")
+                    continue
+
+                if piece is not None and not is_legal_move:
+                    img = ImageTk.PhotoImage(self.images[(piece.color, piece.type_piece)])
+
+                    label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
+                    label.image = img
+                    label.bind("<Button-1>", lambda event, p=piece: self.select_piece(p))
+                    label.place(rely=0.5,relx=0.5,anchor="center")
+                    continue
+
+                if is_legal_move:
+                    img = ImageTk.PhotoImage(self.marker)
+                    label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
+                    label.image = img
                     label.place(relx=0.5,rely=0.5,anchor="center")
 
 
