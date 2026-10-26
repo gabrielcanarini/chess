@@ -38,7 +38,7 @@ def get_initial_state_pieces():
     ]
 
     #PEZZI TEST
-    pieces[32] = Piece(type_piece="Knight", color="W")
+    pieces[36] = Piece(type_piece="Rook", color="W")
 
     return pieces
 
@@ -84,7 +84,6 @@ class Game:
         self.marker = Image.open("./gui/asset/marker.png").convert("RGBA").resize((21,21))
 
 
-    #funzione che da una casella ta dá l'index di una casella rispetto ad un movimento x/y dato
 
     def check_and_add_legal_move(self, i: int):
         # DA VEDERE SE LA MOSSA É EFFETTIVAMENTE LEGALE: non ho ancora verificato se la mossa porta la situazione di scacco.
@@ -206,9 +205,117 @@ class Game:
                         o_basso_sinistro = True
 
         if piece.type_piece == "Knight":
-            return
+
+            #MOVIMENTO CON L ROVESCIATA
+            index_alto_destra = get_index_by_initial_position(pos, 1 , 2)
+            index_alto_sinistra = get_index_by_initial_position(pos, 1, -2)
+            index_basso_destra = get_index_by_initial_position(pos, -1, 2)
+            index_basso_sinistra = get_index_by_initial_position(pos, -1, -2)
+
+            if not index_alto_destra is None:
+                p = self.pieces[index_alto_destra]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index_alto_destra)
 
 
+            if not index_alto_sinistra is None:
+                p = self.pieces[index_alto_sinistra]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index_alto_sinistra)
+
+
+            if not index_basso_destra is None:
+                p = self.pieces[index_basso_destra]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index_basso_destra)
+
+
+            if not index_basso_sinistra is None:
+                p = self.pieces[index_basso_sinistra]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index_basso_sinistra)
+
+
+            #MOVIMENTI CON L NON ROVESCIATA
+            index_alto_destra = get_index_by_initial_position(pos, 2 , 1)
+            index_alto_sinistra = get_index_by_initial_position(pos, 2, -1)
+            index_basso_destra = get_index_by_initial_position(pos, -2, 1)
+            index_basso_sinistra = get_index_by_initial_position(pos, -2, -1)
+
+            if not index_alto_destra is None:
+                p = self.pieces[index_alto_destra]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index_alto_destra)
+
+
+            if not index_alto_sinistra is None:
+                p = self.pieces[index_alto_sinistra]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index_alto_sinistra)
+
+
+            if not index_basso_destra is None:
+                p = self.pieces[index_basso_destra]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index_basso_destra)
+
+
+            if not index_basso_sinistra is None:
+                p = self.pieces[index_basso_sinistra]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index_basso_sinistra)
+
+        if piece.type_piece == "Rook":
+            o_up = False
+            o_down = False
+            o_right = False
+            o_left = False
+
+            for i in range(1,8):
+                c_up = get_index_by_initial_position(pos, i, 0)
+                c_down = get_index_by_initial_position(pos, -i, 0)
+                c_right = get_index_by_initial_position(pos, 0, i)
+                c_left = get_index_by_initial_position(pos, 0, -i)
+
+                if not o_up and not c_up is None:
+                    p = self.pieces[c_up]
+                    if p is None:
+                        self.check_and_add_legal_move(c_up)
+                    elif p.color != piece.color:
+                        self.check_and_add_legal_move(c_up)
+                        o_up = True
+                    else:
+                        o_up = True
+
+                if not o_down and not c_down is None:
+                    p = self.pieces[c_down]
+                    if p is None:
+                        self.check_and_add_legal_move(c_down)
+                    elif p.color != piece.color:
+                        self.check_and_add_legal_move(c_down)
+                        o_down = True
+                    else:
+                        o_down = True
+
+                if not o_right and not c_right is None:
+                    p = self.pieces[c_right]
+                    if p is None:
+                        self.check_and_add_legal_move(c_right)
+                    elif p.color != piece.color:
+                        self.check_and_add_legal_move(c_right)
+                        o_right = True
+                    else:
+                        o_right = True
+
+                if not o_left and not c_left is None:
+                    p = self.pieces[c_left]
+                    if p is None:
+                        self.check_and_add_legal_move(c_left)
+                    elif p.color != piece.color:
+                        self.check_and_add_legal_move(c_left)
+                        o_left = True
+                    else:
+                        o_left = True
 
         print(f"{self.legal_move}")
 
