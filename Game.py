@@ -37,11 +37,22 @@ def get_initial_state_pieces():
         Piece(type_piece="Rook", color="W"),
     ]
 
+    #PEZZI TEST
+    pieces[32] = Piece(type_piece="Knight", color="W")
+
     return pieces
 
-
 def get_index_by_initial_position(pos: int, spostamento_row: int, spostamento_col: int):
-    return pos + (spostamento_row * 8) + spostamento_col
+    row = pos // 8
+    col = pos % 8
+
+    new_row = row + spostamento_row
+    new_col = col + spostamento_col
+
+    if not (0 <= new_row < 8 and 0 <= new_col < 8):
+        return None
+
+    return new_row * 8 + new_col
 def get_row_by_index(pos: int):
     return pos // 8
 def get_col_by_index(pos: int):
@@ -146,10 +157,56 @@ class Game:
             o_basso_sinistro = False
 
             for i in range(1,8):
-                #ciclo nella diagonale alta destra rispetto al pezzo
-                if not o_alto_destro:
-                    def x(p: Piece):
-                        return
+                #Alto destro
+                index = get_index_by_initial_position(pos, i ,i)
+                if not o_alto_destro and not index is None:
+                    p_index = self.pieces[index]
+                    if p_index is None:
+                        self.check_and_add_legal_move(index)
+                    elif p_index.color == piece:
+                        o_alto_destro = True
+                    elif p_index.color != piece.color:
+                        self.check_and_add_legal_move(index)
+                        o_alto_destro = True
+
+                #alto sinistro
+                index = get_index_by_initial_position(pos, i, -i)
+                if not o_alto_sinistro and not index is None:
+                    p_index = self.pieces[index]
+                    if p_index is None:
+                        self.check_and_add_legal_move(index)
+                    elif p_index.color == piece:
+                        o_alto_sinistro = True
+                    elif p_index.color != piece.color:
+                        self.check_and_add_legal_move(index)
+                        o_alto_sinistro = True
+
+                #basso destro
+                index = get_index_by_initial_position(pos, -i, i)
+                if not o_basso_destro and not index is None:
+                    p_index = self.pieces[index]
+                    if p_index is None:
+                        self.check_and_add_legal_move(index)
+                    elif p_index.color == piece:
+                        o_basso_destro= True
+                    elif p_index.color != piece.color:
+                        self.check_and_add_legal_move(index)
+                        o_basso_destro = True
+
+                #basso sinistro
+                index = get_index_by_initial_position(pos, -i, -i)
+                if not o_basso_sinistro and not index is None:
+                    p_index = self.pieces[index]
+                    if p_index is None:
+                        self.check_and_add_legal_move(index)
+                    elif p_index.color == piece:
+                        o_basso_sinistro = True
+                    elif p_index.color != piece.color:
+                        self.check_and_add_legal_move(index)
+                        o_basso_sinistro = True
+
+        if piece.type_piece == "Knight":
+            return
 
 
 
