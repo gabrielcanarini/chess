@@ -41,10 +41,6 @@ def get_initial_state_pieces():
         Piece(type_piece="Rook", color="W"),
     ]
 
-    #PEZZI TEST
-    pieces[36] = Piece(type_piece="Rook", color="W")
-    pieces[45] = Piece(type_piece="King", color="W")
-
     return pieces
 
 def get_index_by_initial_position(pos: int, spostamento_row: int, spostamento_col: int):
@@ -72,6 +68,10 @@ class Game:
     marker = None
     main_frame = None
     turn = "W"
+    is_arrocco_w_destro = True
+    is_arrocco_w_sinistro = True
+    is_arrocco_b_destro = True
+    is_arrocco_b_sinistro = True
 
     def __init__(self):
         self.pieces = get_initial_state_pieces()
@@ -79,6 +79,10 @@ class Game:
         self.legal_move = []
         self.main_frame = None
         self.turn = "W"
+        self.is_arrocco_w_destro = True
+        self.is_arrocco_w_sinistro = True
+        self.is_arrocco_b_destro = True
+        self.is_arrocco_b_sinistro = True
 
         #Load asset
 
@@ -97,6 +101,78 @@ class Game:
                 self.images[(color, piece)] = img
         self.marker = Image.open("./gui/asset/marker.png").convert("RGBA").resize((21,21))
 
+
+    def is_casella_attaccata(self, target: int, colore: str) -> bool:
+        """True se target è attaccata da un pezzo del colore avversario."""
+        for i, p in enumerate(self.pieces):
+            if p is None or p.color == colore:
+                continue
+
+            # I pedoni attaccano le diagonali anche quando sono vuote.
+            if p.type_piece == "Pawn":
+                direzione = 1 if p.color == "W" else -1
+                for dc in (-1, 1):
+                    index = get_index_by_initial_position(i, direzione, dc)
+                    if index == target:
+                        return True
+            # Il re attacca le otto caselle adiacenti, non l'arrocco.
+            elif p.type_piece == "King":
+                for dr, dc in (
+                    (1, 0), (-1, 0), (0, 1), (0, -1),
+                    (1, 1), (1, -1), (-1, 1), (-1, -1),
+                ):
+                    index = get_index_by_initial_position(i, dr, dc)
+                    if index == target:
+                        return True
+            else:
+                moves = self.search_possible_move(i, True) or []
+                if target in moves:
+                    return True
+        return False
+
+    def is_arrocco_legale(self, colore: str, corto: bool) -> bool:
+        """Verifica le condizioni dell'arrocco, compreso il percorso del re."""
+        home = 4 if colore == "W" else 60
+        king = self.pieces[home]
+        if king is None or king.type_piece != "King" or king.color != colore:
+            return False
+
+        if colore == "W":
+            disponibile = self.is_arrocco_w_destro if corto else self.is_arrocco_w_sinistro
+        else:
+            disponibile = self.is_arrocco_b_destro if corto else self.is_arrocco_b_sinistro
+        if not disponibile:
+            return False
+
+        rook_pos = (home + 3) if corto else (home - 4)
+        rook = self.pieces[rook_pos]
+        if rook is None or rook.type_piece != "Rook" or rook.color != colore:
+            return False
+
+        # Corto: f/g oppure f8/g8. Lungo: b/c/d oppure b8/c8/d8.
+        if corto:
+            empty_squares = (home + 1, home + 2)
+            king_path = (home, home + 1, home + 2)
+        else:
+            empty_squares = (home - 1, home - 2, home - 3)
+            king_path = (home, home - 1, home - 2)
+
+        if any(self.pieces[sq] is not None for sq in empty_squares):
+            return False
+
+        # Simula il re su ogni casella del percorso: così il re non maschera
+        # accidentalmente un attacco diretto alla casella successiva.
+        original_home_piece = self.pieces[home]
+        for sq in king_path:
+            self.pieces[home] = None
+            self.pieces[sq] = king
+            attacked = self.is_casella_attaccata(sq, colore)
+            self.pieces[sq] = None
+            self.pieces[home] = original_home_piece
+            if attacked:
+                return False
+
+        return True
 
     def is_scacco(self, colore) -> bool:
         king_position = None
@@ -512,71 +588,26 @@ class Game:
             bishop_move(m, is_r=is_r)
             rook_move(m, is_r=is_r)
 
-        def king_move(m: List[int], is_r = False):
-            #Da definire arrocco
+        def king_move(m: List[int], is_r=False):
+            # Arrocco: lo consideriamo solo quando calcoliamo le mosse legali
+            # reali, non durante i controlli teorici degli attacchi.
+            home = 4 if piece.color == "W" else 60
+            if not is_r and pos == home:
+                for corto, target in ((True, home + 2), (False, home - 2)):
+                    if self.is_arrocco_legale(piece.color, corto):
+                        m.append(target)
+                        self.check_and_add_legal_move(target)
 
-            index = get_index_by_initial_position(pos, 1, 0)
-            if not index is None:
-                p = self.pieces[index]
-                if p is None or p.color != piece.color:
-                    m.append(index)
-                    if not is_r:
-                        self.check_and_add_legal_move(index)
-
-            index = get_index_by_initial_position(pos, -1, 0)
-            if not index is None:
-                p = self.pieces[index]
-                if p is None or p.color != piece.color:
-                    m.append(index)
-                    if not is_r:
-                        self.check_and_add_legal_move(index)
-
-            index = get_index_by_initial_position(pos, 0, 1)
-            if not index is None:
-                p = self.pieces[index]
-                if p is None or p.color != piece.color:
-                    m.append(index)
-                    if not is_r:
-                        self.check_and_add_legal_move(index)
-
-            index = get_index_by_initial_position(pos, 0, -1)
-            if not index is None:
-                p = self.pieces[index]
-                if p is None or p.color != piece.color:
-                    m.append(index)
-                    if not is_r:
-                        self.check_and_add_legal_move(index)
-
-            index = get_index_by_initial_position(pos, 1, 1)
-            if not index is None:
-                p = self.pieces[index]
-                if p is None or p.color != piece.color:
-                    m.append(index)
-                    if not is_r:
-                        self.check_and_add_legal_move(index)
-
-            index = get_index_by_initial_position(pos, 1, -1)
-            if not index is None:
-                p = self.pieces[index]
-                if p is None or p.color != piece.color:
-                    m.append(index)
-                    if not is_r:
-                        self.check_and_add_legal_move(index)
-
-
-
-            index = get_index_by_initial_position(pos, -1, 1)
-            if not index is None:
-                p = self.pieces[index]
-                if p is None or p.color != piece.color:
-                    m.append(index)
-                    if not is_r:
-                        self.check_and_add_legal_move(index)
-
-            index = get_index_by_initial_position(pos, -1, -1)
-            if not index is None:
-                p = self.pieces[index]
-                if p is None or p.color != piece.color:
+            # Mosse normali del re
+            for dr, dc in (
+                (1, 0), (-1, 0), (0, 1), (0, -1),
+                (1, 1), (1, -1), (-1, 1), (-1, -1),
+            ):
+                index = get_index_by_initial_position(pos, dr, dc)
+                if index is None:
+                    continue
+                p_target = self.pieces[index]
+                if p_target is None or p_target.color != piece.color:
                     m.append(index)
                     if not is_r:
                         self.check_and_add_legal_move(index)
@@ -617,8 +648,56 @@ class Game:
     def switch_turn(self):
         self.turn = "W" if self.turn == "B" else "B"
 
-    def move_piece(self, pos, new_pos, switch_turn = True):
-        self.pieces[new_pos] = self.pieces[pos]
+    def move_piece(self, pos, new_pos, switch_turn=True):
+        p = self.pieces[pos]
+        if p is None:
+            return
+
+        captured = self.pieces[new_pos]
+
+        # Muovere il re rende impossibili entrambi gli arro cchi di quel colore.
+        if p.type_piece == "King":
+            if p.color == "W":
+                self.is_arrocco_w_destro = False
+                self.is_arrocco_w_sinistro = False
+            else:
+                self.is_arrocco_b_destro = False
+                self.is_arrocco_b_sinistro = False
+
+        # Muovere una torre dalla sua casella iniziale revoca il relativo arrocco.
+        if p.type_piece == "Rook":
+            if pos == 0:
+                self.is_arrocco_w_sinistro = False
+            elif pos == 7:
+                self.is_arrocco_w_destro = False
+            elif pos == 56:
+                self.is_arrocco_b_sinistro = False
+            elif pos == 63:
+                self.is_arrocco_b_destro = False
+
+        # Anche catturare una torre sulla casella iniziale revoca l'arrocco.
+        if captured is not None and captured.type_piece == "Rook":
+            if new_pos == 0:
+                self.is_arrocco_w_sinistro = False
+            elif new_pos == 7:
+                self.is_arrocco_w_destro = False
+            elif new_pos == 56:
+                self.is_arrocco_b_sinistro = False
+            elif new_pos == 63:
+                self.is_arrocco_b_destro = False
+
+        # Durante l'arrocco spostiamo anche la torre.
+        if p.type_piece == "King" and abs(new_pos - pos) == 2:
+            if new_pos > pos:  # corto
+                rook_pos = pos + 3
+                rook_new_pos = pos + 1
+            else:  # lungo
+                rook_pos = pos - 4
+                rook_new_pos = pos - 1
+            self.pieces[rook_new_pos] = self.pieces[rook_pos]
+            self.pieces[rook_pos] = None
+
+        self.pieces[new_pos] = p
         self.pieces[pos] = None
         self.selected_piece = None
         if switch_turn:
