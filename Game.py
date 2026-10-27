@@ -67,12 +67,14 @@ class Game:
     images = {}
     marker = None
     main_frame = None
+    turn = "W"
 
     def __init__(self):
         self.pieces = get_initial_state_pieces()
         self.selected_piece = None
         self.legal_move = []
         self.main_frame = None
+        self.turn = "W"
 
         #Load asset
         self.images = {
@@ -404,20 +406,51 @@ class Game:
 
         print(f"{self.legal_move}")
 
+    def switch_turn(self):
+        self.turn = "W" if self.turn == "B" else "B"
 
+    def move_piece(self, pos, new_pos):
+        self.pieces[new_pos] = self.pieces[pos]
+        self.pieces[pos] = None
+        self.selected_piece = None
+        self.switch_turn()
 
-    def select_piece(self, position: int):
-        if self.selected_piece is not None and self.selected_piece == position:
+    def select_cell(self, position: int):
+        p_s = self.pieces[position]
+
+        # 1. Click sul pezzo già selezionato
+        if position == self.selected_piece:
             return
-        print(f"posizione: {position} [row:{get_row_by_index(position)}, col:{get_col_by_index(position)}], tipo: {self.pieces[position].type_piece}, colore: {self.pieces[position].color}")
 
-        self.selected_piece = position
-        self.search_possible_move(position)
+        # 2. Nessun pezzo selezionato: provo a selezionarne uno
+        if self.selected_piece is None:
+            if p_s is not None and p_s.color == self.turn:
+                self.selected_piece = position
+                self.search_possible_move(position)
+                self.draw_board()
+            return
 
+        # 3. Click su una destinazione valida: muovo il pezzo
+        if position in self.legal_move:
+            self.move_piece(self.selected_piece, position)
 
-        #Soluzione pessima, si vede un attimo di schermata bianca qunado aggiorna si deve trovare una soluzione migliore.
+            self.selected_piece = None
+            self.legal_move = []
+
+            self.draw_board()
+            return
+
+        # 4. Click su un altro pezzo dello stesso colore: cambio selezione
+        if p_s is not None and p_s.color == self.turn:
+            self.selected_piece = position
+            self.search_possible_move(position)
+            self.draw_board()
+            return
+
+        # 5. Click su una casella non valida: deseleziono
+        self.selected_piece = None
+        self.legal_move = []
         self.draw_board()
-
 
     def draw_board(self):
         if self.main_frame is not None:
@@ -428,6 +461,7 @@ class Game:
             bg = "white" if (get_row_by_index(r) + get_col_by_index(r)) % 2 != 0 else "black"
 
             cella = tk.Frame(self.main_frame, width=100, height=100, bg=bg)
+            cella.bind("<Button-1>", lambda event, position=r: self.select_cell(position))
             cella.grid(row=8-get_row_by_index(r), column=get_col_by_index(r))
             cella.grid_propagate(False)
 
@@ -454,7 +488,6 @@ class Game:
 
                 label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
                 label.image = img
-                label.bind("<Button-1>", lambda event, position=r: self.select_piece(position))
                 label.place(rely=0.5,relx=0.5,anchor="center")
                 continue
 
