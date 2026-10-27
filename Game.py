@@ -3,7 +3,8 @@ from typing import List
 
 from Pieces import *
 import tkinter as tk
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageEnhance
+
 
 def get_initial_state_pieces():
     pieces: list[Piece | None] = [None] * 64
@@ -80,13 +81,20 @@ class Game:
         self.turn = "W"
 
         #Load asset
-        self.images = {
-        (color, piece): Image.open(
-            f"./gui/asset/{color}_{piece}.png"
-        ).convert("RGBA").resize((32,64))
-        for color in ("W", "B")
-        for piece in ("Pawn", "Rook", "Knight", "Bishop", "Queen", "King")
-        }
+
+        #######non vedevo bene la differenza di colore tra i pezzi, invece che cambiare asset ho modificato la brillantezza (grazie chat<3)
+        self.images = {}
+        for color in ("W", "B"):
+            for piece in ("Pawn", "Rook", "Knight", "Bishop", "Queen", "King"):
+                img = Image.open(f"./gui/asset/{color}_{piece}.png").convert("RGBA").resize((32, 64))
+
+                factor = 1.4 if color == "W" else 0.45
+                alpha = img.getchannel("A")
+                img = ImageEnhance.Brightness(img.convert("RGB")).enhance(factor)
+                img = img.convert("RGBA")
+                img.putalpha(alpha)
+
+                self.images[(color, piece)] = img
         self.marker = Image.open("./gui/asset/marker.png").convert("RGBA").resize((21,21))
 
 
