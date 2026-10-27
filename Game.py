@@ -39,6 +39,7 @@ def get_initial_state_pieces():
 
     #PEZZI TEST
     pieces[36] = Piece(type_piece="King", color="W")
+    pieces[45] = Piece(type_piece="King", color="W")
 
     return pieces
 
@@ -87,7 +88,7 @@ class Game:
 
     def check_and_add_legal_move(self, i: int):
         # DA VEDERE SE LA MOSSA É EFFETTIVAMENTE LEGALE: non ho ancora verificato se la mossa porta la situazione di scacco.
-
+        # OVVIAMENTE IL PEZZO MANGIATO NON PUÓ ESSERE UN RE, da verificare
         self.legal_move.append(i)
 
 
@@ -437,7 +438,11 @@ class Game:
             if piece is not None and is_legal_move:
                 marker = self.marker.copy()
                 piece_img = self.images[(piece.color, piece.type_piece)].copy()
-                piece_img.alpha_composite(marker)
+
+                x = (piece_img.width - marker.width) // 2
+                y = (piece_img.height - marker.height) // 2
+
+                piece_img.alpha_composite(marker, (x,y))
                 img = ImageTk.PhotoImage(piece_img)
                 label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
                 label.image = img
