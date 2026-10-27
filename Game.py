@@ -657,6 +657,12 @@ class Game:
         self.legal_move = []
         self.draw_board()
 
+    def carica_immagine(self, cella, img, bg, position):
+        label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
+        label.image = img  # non so perché ma se non lo metto non funziona
+        label.bind("<Button-1>", lambda e, p=position: self.select_cell(p))
+        label.place(relx=0.5, rely=0.5, anchor="center")
+
     def draw_board(self):
         if self.main_frame is not None:
             self.main_frame.destroy()
@@ -675,32 +681,15 @@ class Game:
             is_legal_move = r in self.legal_move
 
             if piece is not None and is_legal_move:
-                marker = self.marker.copy()
                 piece_img = self.images[(piece.color, piece.type_piece)].copy()
-
-                x = (piece_img.width - marker.width) // 2
-                y = (piece_img.height - marker.height) // 2
-
-                piece_img.alpha_composite(marker, (x,y))
-                img = ImageTk.PhotoImage(piece_img)
-                label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
-                label.image = img
-                label.place(rely=0.5,relx=0.5, anchor="center")
-                continue
-
-            if piece is not None and not is_legal_move:
-                img = ImageTk.PhotoImage(self.images[(piece.color, piece.type_piece)])
-
-                label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
-                label.image = img
-                label.place(rely=0.5,relx=0.5,anchor="center")
-                continue
-
-            if is_legal_move:
-                img = ImageTk.PhotoImage(self.marker)
-                label = tk.Label(cella, image=img, borderwidth=0, bg=bg)
-                label.image = img
-                label.place(relx=0.5,rely=0.5,anchor="center")
+                x = (piece_img.width - self.marker.width) // 2
+                y = (piece_img.height - self.marker.height) // 2
+                piece_img.alpha_composite(self.marker, (x, y))
+                self.carica_immagine(cella, ImageTk.PhotoImage(piece_img), bg, r)
+            elif piece is not None:
+                self.carica_immagine(cella, ImageTk.PhotoImage(self.images[(piece.color, piece.type_piece)]), bg, r)
+            elif is_legal_move:
+                self.carica_immagine(cella, ImageTk.PhotoImage(self.marker), bg, r)
 
 
 
