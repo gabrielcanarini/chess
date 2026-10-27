@@ -38,7 +38,7 @@ def get_initial_state_pieces():
     ]
 
     #PEZZI TEST
-    pieces[36] = Piece(type_piece="Queen", color="W")
+    pieces[36] = Piece(type_piece="King", color="W")
 
     return pieces
 
@@ -320,6 +320,69 @@ class Game:
             bishop_move()
             rook_move()
 
+        def king_move():
+            #Da definire arrocco
+            index = get_index_by_initial_position(pos, 1, 0)
+            if not index is None:
+                p = self.pieces[index]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index)
+
+            index = get_index_by_initial_position(pos, -1, 0)
+            if not index is None:
+                p = self.pieces[index]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index)
+
+            index = get_index_by_initial_position(pos, 0, 1)
+            if not index is None:
+                p = self.pieces[index]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index)
+
+            index = get_index_by_initial_position(pos, 0, -1)
+            if not index is None:
+                p = self.pieces[index]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index)
+
+            index = get_index_by_initial_position(pos, 1, 1)
+            if not index is None:
+                p = self.pieces[index]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index)
+
+            index = get_index_by_initial_position(pos, 1, -1)
+            if not index is None:
+                p = self.pieces[index]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index)
+
+            index = get_index_by_initial_position(pos, 0, 1)
+            if not index is None:
+                p = self.pieces[index]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index)
+
+            index = get_index_by_initial_position(pos, 0, -1)
+            if not index is None:
+                p = self.pieces[index]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index)
+
+            index = get_index_by_initial_position(pos, -1, 1)
+            if not index is None:
+                p = self.pieces[index]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index)
+
+            index = get_index_by_initial_position(pos, -1, -1)
+            if not index is None:
+                p = self.pieces[index]
+                if p is None or p.color != piece.color:
+                    self.check_and_add_legal_move(index)
+
+
         if piece.type_piece == "Pawn":
             pawn_move()
 
@@ -334,6 +397,9 @@ class Game:
 
         if piece.type_piece == "Queen":
             queen_move()
+
+        if piece.type_piece == "King":
+            king_move()
 
         print(f"{self.legal_move}")
 
