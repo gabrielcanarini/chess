@@ -38,7 +38,7 @@ def get_initial_state_pieces():
     ]
 
     #PEZZI TEST
-    pieces[36] = Piece(type_piece="Rook", color="W")
+    pieces[36] = Piece(type_piece="Queen", color="W")
 
     return pieces
 
@@ -54,9 +54,9 @@ def get_index_by_initial_position(pos: int, spostamento_row: int, spostamento_co
 
     return new_row * 8 + new_col
 def get_row_by_index(pos: int):
-    return pos // 8
+    return pos // 8 + 1
 def get_col_by_index(pos: int):
-    return pos % 8
+    return pos % 8 + 1
 
 class Game:
     pieces: list[Piece | None] = []
@@ -98,66 +98,66 @@ class Game:
         if piece is None:
             return
 
-
-        if piece.type_piece == "Pawn":
+        def pawn_move():
             if piece.color == "W":
                 #Mossa base, una casella avanti
                 indice_casella_davanti = get_index_by_initial_position(pos, 1, 0)
-                if self.pieces[indice_casella_davanti] is None:
+
+                if not indice_casella_davanti is None and self.pieces[indice_casella_davanti] is None:
                     self.check_and_add_legal_move(indice_casella_davanti)
 
                 #Controllo i lati se puó mangiare
                 indice_pezzo_laterale_sinistro = get_index_by_initial_position(pos, 1, 1)
 
-                if self.pieces[indice_pezzo_laterale_sinistro] is not None and self.pieces[indice_pezzo_laterale_sinistro].color == "B":
+                if not indice_pezzo_laterale_sinistro is None and self.pieces[indice_pezzo_laterale_sinistro] is not None and self.pieces[indice_pezzo_laterale_sinistro].color == "B":
                     self.check_and_add_legal_move(indice_pezzo_laterale_sinistro)
 
                 indice_pezzo_laterale_destro = get_index_by_initial_position(pos, 1, -1)
 
-                if self.pieces[indice_pezzo_laterale_destro] is not None and self.pieces[indice_pezzo_laterale_destro].color == "B":
+                if not indice_pezzo_laterale_destro is None and self.pieces[indice_pezzo_laterale_destro] is not None and self.pieces[indice_pezzo_laterale_destro].color == "B":
                     self.check_and_add_legal_move(indice_pezzo_laterale_destro)
 
                 #Controllo la prima mossa di 2 caselle avanti
-                if self.pieces[indice_casella_davanti] is None and get_row_by_index(pos) == 2:
-                    indice_due_caselle_avanti = get_index_by_initial_position(pos, 2, 0)
-                    if \
-                    self.pieces[indice_due_caselle_avanti] is None or self.pieces[indice_due_caselle_avanti].color == "B":
-                        self.check_and_add_legal_move(indice_due_caselle_avanti)
+                if get_row_by_index(pos) == 2:
+                    if not indice_casella_davanti is None and self.pieces[indice_casella_davanti] is None:
+                        due_avanti = get_index_by_initial_position(pos, 2, 0)
+                        if not due_avanti is None and self.pieces[due_avanti] is None:
+                            self.check_and_add_legal_move(due_avanti)
 
             if piece.color == "B":
                 #Mossa base, una casella avanti
                 indice_casella_davanti = get_index_by_initial_position(pos, -1, 0)
-                if self.pieces[indice_casella_davanti] is None:
+                if not indice_casella_davanti is None and self.pieces[indice_casella_davanti] is None:
                     self.check_and_add_legal_move(indice_casella_davanti)
 
                 #Controllo i lati se puó mangiare
                 indice_pezzo_laterale_sinistro = get_index_by_initial_position(pos, -1, 1)
 
-                if self.pieces[indice_pezzo_laterale_sinistro] is not None and self.pieces[indice_pezzo_laterale_sinistro].color == "W":
+                if not indice_pezzo_laterale_sinistro is None and self.pieces[indice_pezzo_laterale_sinistro] is not None and self.pieces[indice_pezzo_laterale_sinistro].color == "W":
                     self.check_and_add_legal_move(indice_pezzo_laterale_sinistro)
 
                 indice_pezzo_laterale_destro = get_index_by_initial_position(pos, -1, -1)
 
-                if self.pieces[indice_pezzo_laterale_destro] is not None and self.pieces[indice_pezzo_laterale_destro].color == "W":
+                if not indice_pezzo_laterale_destro is None and self.pieces[indice_pezzo_laterale_destro] is not None and self.pieces[indice_pezzo_laterale_destro].color == "W":
                     self.check_and_add_legal_move(indice_pezzo_laterale_destro)
 
                 #Controllo la prima mossa di 2 caselle avanti
-                if self.pieces[indice_casella_davanti] is None and get_row_by_index(pos) == 7:
-                    indice_due_caselle_avanti = get_index_by_initial_position(pos, -2, 0)
-                    if \
-                    self.pieces[indice_due_caselle_avanti] is None or self.pieces[indice_due_caselle_avanti].color == "B":
-                        self.check_and_add_legal_move(indice_due_caselle_avanti)
+                if get_row_by_index(pos) == 7:
+                    if not indice_casella_davanti is None and self.pieces[indice_casella_davanti] is None:
+                        due_avanti = get_index_by_initial_position(pos, -2, 0)
+                        if not due_avanti is None and self.pieces[due_avanti] is None:
+                            self.check_and_add_legal_move(due_avanti)
 
-        if piece.type_piece == "Bishop":
-            #ciclo per un massimo di 7 volte (la massima distanza che puó percorrere) finche non trovo un ostacolo. In ogni direzione
+        def bishop_move():
+            # ciclo per un massimo di 7 volte (la massima distanza che puó percorrere) finche non trovo un ostacolo. In ogni direzione
             o_alto_destro = False
             o_alto_sinistro = False
             o_basso_destro = False
             o_basso_sinistro = False
 
-            for i in range(1,8):
-                #Alto destro
-                index = get_index_by_initial_position(pos, i ,i)
+            for i in range(1, 8):
+                # Alto destro
+                index = get_index_by_initial_position(pos, i, i)
                 if not o_alto_destro and not index is None:
                     p_index = self.pieces[index]
                     if p_index is None:
@@ -168,7 +168,7 @@ class Game:
                         self.check_and_add_legal_move(index)
                         o_alto_destro = True
 
-                #alto sinistro
+                # alto sinistro
                 index = get_index_by_initial_position(pos, i, -i)
                 if not o_alto_sinistro and not index is None:
                     p_index = self.pieces[index]
@@ -180,19 +180,19 @@ class Game:
                         self.check_and_add_legal_move(index)
                         o_alto_sinistro = True
 
-                #basso destro
+                # basso destro
                 index = get_index_by_initial_position(pos, -i, i)
                 if not o_basso_destro and not index is None:
                     p_index = self.pieces[index]
                     if p_index is None:
                         self.check_and_add_legal_move(index)
                     elif p_index.color == piece:
-                        o_basso_destro= True
+                        o_basso_destro = True
                     elif p_index.color != piece.color:
                         self.check_and_add_legal_move(index)
                         o_basso_destro = True
 
-                #basso sinistro
+                # basso sinistro
                 index = get_index_by_initial_position(pos, -i, -i)
                 if not o_basso_sinistro and not index is None:
                     p_index = self.pieces[index]
@@ -204,8 +204,7 @@ class Game:
                         self.check_and_add_legal_move(index)
                         o_basso_sinistro = True
 
-        if piece.type_piece == "Knight":
-
+        def knight_move():
             #MOVIMENTO CON L ROVESCIATA
             index_alto_destra = get_index_by_initial_position(pos, 1 , 2)
             index_alto_sinistra = get_index_by_initial_position(pos, 1, -2)
@@ -265,13 +264,13 @@ class Game:
                 if p is None or p.color != piece.color:
                     self.check_and_add_legal_move(index_basso_sinistra)
 
-        if piece.type_piece == "Rook":
+        def rook_move():
             o_up = False
             o_down = False
             o_right = False
             o_left = False
 
-            for i in range(1,8):
+            for i in range(1, 8):
                 c_up = get_index_by_initial_position(pos, i, 0)
                 c_down = get_index_by_initial_position(pos, -i, 0)
                 c_right = get_index_by_initial_position(pos, 0, i)
@@ -317,6 +316,25 @@ class Game:
                     else:
                         o_left = True
 
+        def queen_move():
+            bishop_move()
+            rook_move()
+
+        if piece.type_piece == "Pawn":
+            pawn_move()
+
+        if piece.type_piece == "Bishop":
+            bishop_move()
+
+        if piece.type_piece == "Knight":
+            knight_move()
+
+        if piece.type_piece == "Rook":
+          rook_move()
+
+        if piece.type_piece == "Queen":
+            queen_move()
+
         print(f"{self.legal_move}")
 
 
@@ -324,7 +342,7 @@ class Game:
     def select_piece(self, position: int):
         if self.selected_piece is not None and self.selected_piece == position:
             return
-        print(f"posizione: {position}, tipo: {self.pieces[position].type_piece}, colore: {self.pieces[position].color}")
+        print(f"posizione: {position} [row:{get_row_by_index(position)}, col:{get_col_by_index(position)}], tipo: {self.pieces[position].type_piece}, colore: {self.pieces[position].color}")
 
         self.selected_piece = position
         self.search_possible_move(position)
